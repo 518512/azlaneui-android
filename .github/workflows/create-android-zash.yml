@@ -152,3 +152,67 @@ jobs:
           git add last_build_tag.txt
           git commit -m "Update last build tag to ${{ steps.check_new_release.outputs.SAVED_TAG }}"
           git push
+      # -------------------- Push All APKs to Telegram --------------------
+      - name: 📤 Push APK(s) to Telegram (with Zashboard changelog)
+        if: success()
+        env:
+          TG_BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}
+          TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
+          BUILD_TAG: ${{ steps.check_new_release.outputs.SAVED_TAG }}
+          BUILD_TIME: ${{ steps.current-datetime.outputs.CURRENT_DATETIME }}
+          GITHUB_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          GITHUB_ACTOR: ${{ github.actor }}
+        run: |
+          echo "📦 Searching for APK files..."
+          APK_FILES=$(find ./android/app/build/outputs/apk -type f -name "*.apk" 2>/dev/null)
+
+          if [ -z "$APK_FILES" ]; then
+            echo "⚠️ No APK files found to send."
+            echo "NO_APK_FOUND=true" >> $GITHUB_ENV
+            exit 0
+          fi
+
+          echo "🧾 Fetching Zashboard changelog for tag ${BUILD_TAG}..."
+          ZASHBOARD_REPO="Zephyruso/zashboard"
+          RELEASE_JSON=$(curl -s "https://api.github.com/repos/$ZASHBOARD_REPO/releases/tags/${BUILD_TAG}")
+          RELEASE_NAME=$(echo "$RELEASE_JSON" | jq -r '.name // "'"${BUILD_TAG}"'"')
+          RELEASE_DATE=$(echo "$RELEASE_JSON" | jq -r '.published_at // ""' | cut -d'T' -f1)
+          RELEASE_BODY=$(echo "$RELEASE_JSON" | jq -r '.body // "No changelog provided."')
+
+          # 清理过长日志（Telegram 限制 4096 字符）
+          CLEAN_BODY=$(echo "$RELEASE_BODY" | head -c 3500)
+          if [ "$(echo "$RELEASE_BODY" | wc -c)" -gt 3500 ]; then
+            CLEAN_BODY="${CLEAN_BODY}\n\n...（日志过长已截断）"
+          fi
+
+          TOTAL_SIZE=0
+          COUNT=0
+
+          for APK in $APK_FILES; do
+            FILE_NAME=$(basename "$APK")
+            FILE_SIZE=$(du -h "$APK" | cut -f1)
+            FILE_BYTES=$(du -b "$APK" | cut -f1)
+            TOTAL_SIZE=$((TOTAL_SIZE + FILE_BYTES))
+            COUNT=$((COUNT + 1))
+
+            echo "🚀 Sending $FILE_NAME ($FILE_SIZE) to Telegram..."
+
+            curl -s -S -m 180 \
+              -F document=@"$APK" \
+              -F caption="📱 *Azlaneui 新构建完成！*
+
+🧩 版本：\`${BUILD_TAG}\` (zash)
+📦 文件：\`${FILE_NAME}\` (${FILE_SIZE})
+📅 构建时间：\`${BUILD_TIME}\`
+👤 触发者：\`${GITHUB_ACTOR}\`
+🔗 查看构建日志: [GitHub Actions Run](${GITHUB_RUN_URL})
+
+📦 Zashboard ${RELEASE_NAME}（${RELEASE_DATE}）更新日志：
+${CLEAN_BODY}" \
+              -F parse_mode="Markdown" \
+              "https://api.telegram.org/bot${TG_BOT_TOKEN}/sendDocument?chat_id=${TG_CHAT_ID}" \
+              | jq '.ok' || true
+          done
+
+          TOTAL_HUMAN=$(numfmt --to=iec $TOTAL_SIZE)
+          echo "✅ Uploaded $COUNT APK(s) total ($TOTAL_HUMAN) to Telegram."
