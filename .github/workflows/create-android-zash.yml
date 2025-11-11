@@ -53,12 +53,17 @@ jobs:
           if [ "$LATEST_TAG" = "$LAST_TAG" ]; then
             echo "No new release, skipping build."
             echo "SKIP_BUILD=true" >> $GITHUB_ENV   # ✅ 设置环境变量
+            sync
             exit 0
 
           fi
           echo "SAVED_TAG=$LATEST_TAG" >> $GITHUB_OUTPUT
           echo "SKIP_BUILD=false" >> $GITHUB_ENV   # ✅ 有新版本则继续
 
+      # -------------------- Debug SKIP_BUILD--------------------
+      - name: Debug SKIP_BUILD value
+        run: echo "SKIP_BUILD = $SKIP_BUILD"
+        
       # -------------------- Download Web Assets --------------------
       - name: Download gh pages (zashboard dist)
         if: env.SKIP_BUILD != 'true'
