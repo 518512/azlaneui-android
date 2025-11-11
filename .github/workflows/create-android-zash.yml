@@ -141,7 +141,7 @@ jobs:
           prerelease: false
           draft: false
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.A_GITHUB_TOKEN }}
 
       # -------------------- Update Last Build Tag --------------------
       - name: Save last build tag
