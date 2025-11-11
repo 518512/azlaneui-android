@@ -165,7 +165,7 @@ jobs:
         run: |
           echo "📦 搜索 APK 文件..."
           # 查找 APK 文件
-          APK_FILES=$(find ./android/app/build/outputs/apk -type f -name "*.apk" 2>/dev/null)
+          APK_FILES=$(files: ./android/app/build/outputs/apk/release/*.apk 2>/dev/null)
 
           if [ -z "$APK_FILES" ]; then
             echo "⚠️ 未找到 APK 文件，跳过发送。"
@@ -206,17 +206,17 @@ jobs:
               -F document=@"$APK" \
               -F caption="📱 Azlaneui 新构建完成！
 
-                         🧩 版本：\`${BUILD_TAG}\` (zash)
-                         📦 文件：\`${FILE_NAME}\` (${FILE_SIZE})
-                         📅 构建时间：\`${BUILD_TIME}\`
-                         👤 触发者：\`${GITHUB_ACTOR}\`
-                         🔗 查看构建日志: [GitHub Actions Run](${GITHUB_RUN_URL})
+    🧩 版本：\`${BUILD_TAG}\` (zash)
+    📦 文件：\`${FILE_NAME}\` (${FILE_SIZE})
+    📅 构建时间：\`${BUILD_TIME}\`
+    👤 触发者：\`${GITHUB_ACTOR}\`
+    🔗 查看构建日志: [GitHub Actions Run](${GITHUB_RUN_URL})
 
-                         📦 Zashboard ${RELEASE_NAME}（${RELEASE_DATE}）更新日志：
-                         ${CLEAN_BODY}" \
-                                       "https://api.telegram.org/bot${TG_BOT_TOKEN}/sendDocument?chat_id=${TG_CHAT_ID}" \
-                                       | jq '.ok' || true
-                                   done
+    📦 Zashboard ${RELEASE_NAME}（${RELEASE_DATE}）更新日志：
+    ${CLEAN_BODY}" \
+                  "https://api.telegram.org/bot${TG_BOT_TOKEN}/sendDocument?chat_id=${TG_CHAT_ID}" \
+                  | jq '.ok' || true
+              done
 
           # 显示总文件数和总大小
           TOTAL_HUMAN=$(numfmt --to=iec $TOTAL_SIZE)
@@ -243,9 +243,9 @@ jobs:
             -d "{
               \"chat_id\": \"${TG_CHAT_ID}\",
               \"text\": \"${STATUS}\n
-                         🧩 版本：\`${BUILD_TAG}\` (zash)
-                         👤 触发者：\`${GITHUB_ACTOR}\`
-                         🔗 [查看构建日志](${GITHUB_RUN_URL})\",
-                                       \"parse_mode\": \"Markdown\"
-                                     }" \
-                                     "https://api.telegram.org/bot${TG_BOT_TOKEN}/sendMessage"
+    🧩 版本：\`${BUILD_TAG}\` (zash)
+    👤 触发者：\`${GITHUB_ACTOR}\`
+    🔗 [查看构建日志](${GITHUB_RUN_URL})\",
+                  \"parse_mode\": \"Markdown\"
+                  }" \
+               "https://api.telegram.org/bot${TG_BOT_TOKEN}/sendMessage"
