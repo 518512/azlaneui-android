@@ -211,8 +211,8 @@ jobs:
           curl -s -S -m 180 \
             -F document=@"$FINAL_APK_PATH" \
             -F caption="📱 Azlaneui 新构建完成！
-📦 Zashboard ${RELEASE_NAME} 更新日志 (${RELEASE_DATE})：
-${CLEAN_BODY}" \
+             📦 Zashboard ${RELEASE_NAME} 更新日志 (${RELEASE_DATE})：
+             ${CLEAN_BODY}" \
             "https://api.telegram.org/bot${TG_BOT_TOKEN}/sendDocument?chat_id=${TG_CHAT_ID}" \
             | jq '.ok' || true
 
