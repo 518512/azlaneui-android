@@ -53,6 +53,7 @@ jobs:
           if [ "$LATEST_TAG" = "$LAST_TAG" ]; then
             echo "No new release, skipping build."
             exit 78
+
           fi
           echo "SAVED_TAG=$LATEST_TAG" >> $GITHUB_OUTPUT
 
@@ -151,19 +152,19 @@ jobs:
           git add last_build_tag.txt
           git commit -m "Update last build tag to ${{ steps.check_new_release.outputs.SAVED_TAG }}"
           git push
-
       # -------------------- Push All APKs to Telegram (with Zashboard changelog) --------------------
       - name: 📤 推送 APK 到 Telegram（含 Zashboard 更新日志）
         if: success()
         env:
-          TG_BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}
-          TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
-          BUILD_TAG: ${{ steps.check_new_release.outputs.SAVED_TAG }}
-          BUILD_TIME: ${{ steps.current-datetime.outputs.CURRENT_DATETIME }}
-          GITHUB_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-          GITHUB_ACTOR: ${{ github.actor }}
+          TG_BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}      # Telegram Bot Token
+          TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}          # Telegram 群组或频道 ID
+          BUILD_TAG: ${{ steps.check_new_release.outputs.SAVED_TAG }}  # 构建的 Tag
+          BUILD_TIME: ${{ steps.current-datetime.outputs.CURRENT_DATETIME }} # 构建时间
+          GITHUB_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }} # Actions 运行链接
+          GITHUB_ACTOR: ${{ github.actor }}             # 触发者
         run: |
           echo "📦 搜索 APK 文件..."
+          # 查找 APK 文件
           APK_FILES=$(find ./android/app/build/outputs/apk -type f -name "*.apk" 2>/dev/null)
 
           if [ -z "$APK_FILES" ]; then
@@ -174,20 +175,23 @@ jobs:
 
           echo "🧾 获取 Zashboard 更新日志（Tag: ${BUILD_TAG}）..."
           ZASHBOARD_REPO="Zephyruso/zashboard"
+          # 获取指定 release 的 JSON
           RELEASE_JSON=$(curl -s "https://api.github.com/repos/$ZASHBOARD_REPO/releases/tags/${BUILD_TAG}")
           RELEASE_NAME=$(echo "$RELEASE_JSON" | jq -r '.name // "'"${BUILD_TAG}"'"')
           RELEASE_DATE=$(echo "$RELEASE_JSON" | jq -r '.published_at // ""' | cut -d'T' -f1)
           RELEASE_BODY=$(echo "$RELEASE_JSON" | jq -r '.body // "No changelog provided."')
 
+          # 处理日志，转换为 Telegram-friendly 纯文本
           CLEAN_BODY=$(echo "$RELEASE_BODY" \
             | sed 's/^## //g' \
             | sed 's/^### //g' \
             | sed 's/^\* /- /g' \
-            | sed 's/\r//g')
+            | sed 's/\r//g')  # 去掉回车符，保留换行
 
           TOTAL_SIZE=0
           COUNT=0
 
+          # 遍历 APK 文件并发送
           for APK in $APK_FILES; do
             FILE_NAME=$(basename "$APK")
             FILE_SIZE=$(du -h "$APK" | cut -f1)
@@ -197,6 +201,7 @@ jobs:
 
             echo "🚀 正在发送 $FILE_NAME ($FILE_SIZE) 到 Telegram..."
 
+            # 发送 APK 文件到 Telegram
             curl -s -S -m 180 \
               -F document=@"$APK" \
               -F caption="📱 Azlaneui 新构建完成！
@@ -213,6 +218,7 @@ ${CLEAN_BODY}" \
               | jq '.ok' || true
           done
 
+          # 显示总文件数和总大小
           TOTAL_HUMAN=$(numfmt --to=iec $TOTAL_SIZE)
           echo "✅ 已上传 $COUNT 个 APK，总大小 $TOTAL_HUMAN 到 Telegram。"
 
