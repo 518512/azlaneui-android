@@ -239,9 +239,9 @@ jobs:
             -d "{
               \"chat_id\": \"${TG_CHAT_ID}\",
               \"text\": \"${STATUS}\n
-      🧩 版本：${BUILD_TAG} (zash)
-      👤 触发者：${GITHUB_ACTOR}
-      🔗 [查看构建日志](${GITHUB_RUN_URL})\",
+          🧩 版本：${BUILD_TAG} (zash)
+          👤 触发者：${GITHUB_ACTOR}
+          🔗 [查看构建日志](${GITHUB_RUN_URL})\",
               \"parse_mode\": \"Markdown\"
             }" \
              "https://api.telegram.org/bot${TG_BOT_TOKEN}/sendMessage"
