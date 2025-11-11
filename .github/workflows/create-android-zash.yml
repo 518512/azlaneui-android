@@ -52,19 +52,23 @@ jobs:
 
           if [ "$LATEST_TAG" = "$LAST_TAG" ]; then
             echo "No new release, skipping build."
+            echo "SKIP_BUILD=true" >> $GITHUB_ENV   # ✅ 设置环境变量
             exit 0
 
           fi
           echo "SAVED_TAG=$LATEST_TAG" >> $GITHUB_OUTPUT
+          echo "SKIP_BUILD=false" >> $GITHUB_ENV   # ✅ 有新版本则继续
 
       # -------------------- Download Web Assets --------------------
       - name: Download gh pages (zashboard dist)
+        if: env.SKIP_BUILD != 'true'
         run: |
           wget https://github.com/Zephyruso/zashboard/releases/latest/download/dist.zip
           unzip dist.zip
 
       # -------------------- Capacitor & Android --------------------
       - name: Add android folder if not present
+        if: env.SKIP_BUILD != 'true'
         run: if [ ! -d "./android" ]; then npx cap add android; fi
 
       - name: Capacitor update
@@ -74,6 +78,7 @@ jobs:
         run: npx cap copy
 
       - name: Generate icons and splash screen
+        if: env.SKIP_BUILD != 'true'
         run: |
           if [ -d "./resources" ]; then
             echo "Generating icons and splash screen..."
@@ -84,20 +89,24 @@ jobs:
           fi
 
       - name: AndroidManifestModify
+        if: env.SKIP_BUILD != 'true'
         run: |
           if [ -f "AndroidManifest.xml" ]; then
             cp AndroidManifest.xml android/app/src/main/AndroidManifest.xml
           fi
 
       - name: Build app
+        if: env.SKIP_BUILD != 'true'
         run: cd android && ./gradlew assembleRelease
 
       - name: Extract Android signing key
+        if: env.SKIP_BUILD != 'true'
         run: |
           echo "${{ secrets.RELEASE_KEYSTORE }}" > android/release.jks.base64
           base64 -d android/release.jks.base64 > android/release.decrypted.jks
 
       - name: Sign APK
+        if: env.SKIP_BUILD != 'true'
         run: |
           zipalign -v 4 ./android/app/build/outputs/apk/release/app-release-unsigned.apk ./android/app/build/outputs/apk/release/app-release-unsigned-aligned.apk
           apksigner sign --ks android/release.decrypted.jks \
@@ -108,16 +117,19 @@ jobs:
 
       # -------------------- Tag & Timestamp --------------------
       - name: Set Build Timestamp
+        if: env.SKIP_BUILD != 'true'
         id: current-datetime
         run: echo "CURRENT_DATETIME=$(date +'%Y-%m-%d-%H_%M_%S%z')" >> "$GITHUB_OUTPUT"
 
       - name: Upload build artifact
+        if: env.SKIP_BUILD != 'true'
         uses: actions/upload-artifact@v4
         with:
           name: build-output-${{ steps.check_new_release.outputs.SAVED_TAG }}-${{ steps.current-datetime.outputs.CURRENT_DATETIME }}
           path: ./android/app/build/outputs/apk/release/
 
       - name: Rename APK
+        if: env.SKIP_BUILD != 'true'
         id: rename_apk
         run: |
           VERSION_NAME="${{ steps.check_new_release.outputs.SAVED_TAG }}"
@@ -128,6 +140,7 @@ jobs:
           echo "FINAL_APK_PATH=$FINAL_APK_NAME" >> $GITHUB_OUTPUT
 
       - name: Upload APK to GitHub Release
+        if: env.SKIP_BUILD != 'true'
         uses: softprops/action-gh-release@v1
         with:
           tag_name: latest-zashboard
@@ -145,6 +158,7 @@ jobs:
 
       # -------------------- Update Last Build Tag --------------------
       - name: Save last build tag
+        if: env.SKIP_BUILD != 'true'
         run: |
           echo "${{ steps.check_new_release.outputs.SAVED_TAG }}" > last_build_tag.txt
           git config user.name "github-actions"
@@ -155,6 +169,7 @@ jobs:
 
       # -------------------- Push Signed APK to Telegram (with Zashboard changelog) --------------------
       - name: 📤 推送 APK 到 Telegram（含 Zashboard 更新日志）
+        if: env.SKIP_BUILD != 'true'
         if: success()
         env:
           TG_BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}      # Telegram Bot Token
@@ -203,6 +218,7 @@ jobs:
 
       # -------------------- 如果构建失败或无 APK，则发送通知 --------------------
       - name: ⚠️ 构建失败或无文件通知 Telegram
+        if: env.SKIP_BUILD != 'true'
         if: failure() || env.NO_APK_FOUND == 'true'
         env:
           TG_BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}
