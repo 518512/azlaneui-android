@@ -201,14 +201,14 @@ jobs:
               -F document=@"$APK" \
               -F caption="📱 *Azlaneui 新构建完成！*
 
-🧩 版本：\`${BUILD_TAG}\` (zash)
-📦 文件：\`${FILE_NAME}\` (${FILE_SIZE})
-📅 构建时间：\`${BUILD_TIME}\`
-👤 触发者：\`${GITHUB_ACTOR}\`
-🔗 查看构建日志: [GitHub Actions Run](${GITHUB_RUN_URL})
+                 🧩 版本：\`${BUILD_TAG}\` (zash)
+                 📦 文件：\`${FILE_NAME}\` (${FILE_SIZE})
+                 📅 构建时间：\`${BUILD_TIME}\`
+                 👤 触发者：\`${GITHUB_ACTOR}\`
+                 🔗 查看构建日志: [GitHub Actions Run](${GITHUB_RUN_URL})
 
-📦 Zashboard ${RELEASE_NAME}（${RELEASE_DATE}）更新日志：
-${CLEAN_BODY}" \
+                 📦 Zashboard ${RELEASE_NAME}（${RELEASE_DATE}）更新日志：
+                 ${CLEAN_BODY}" \
               -F parse_mode="Markdown" \
               "https://api.telegram.org/bot${TG_BOT_TOKEN}/sendDocument?chat_id=${TG_CHAT_ID}" \
               | jq '.ok' || true
