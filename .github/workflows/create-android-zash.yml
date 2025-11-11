@@ -184,6 +184,7 @@ jobs:
             | sed 's/^### //g' \
             | sed 's/^\* /- /g' \
             | sed 's/\r//g')  # 去掉回车符
+            | sed -E 's/\[([^\]]+)\]\((https?:\/\/[^\)]+)\)/[\1](\2)/g')
 
           FILE_NAME=$(basename "$FINAL_APK_PATH")
           FILE_SIZE=$(du -h "$FINAL_APK_PATH" | cut -f1)
