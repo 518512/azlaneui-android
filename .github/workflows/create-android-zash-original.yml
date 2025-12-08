@@ -1,4 +1,4 @@
-name: Build Android zash
+name: Build Android zash - original
 run-name: Android App 🚀 Z - original
 on:
   workflow_dispatch:
