@@ -1,5 +1,8 @@
 # Auto converting panels to apk
 
+1.增加推送APK及zashboard日志到Tg
+2.修复APP版本与zashboard一致。
+
 在inoribea/azlaneui-android基础上添加每周更新一次构建，添加Yacd面板构建，添加APP启动图标 **by [AliceHanako](https://github.com/AliceHanako/azlaneui-android)**
 
 感谢AliceHanako、inoribea，Zephyruso，MetaCubeX，Yacd-meta。<br>
