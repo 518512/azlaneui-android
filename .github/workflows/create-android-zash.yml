@@ -80,6 +80,19 @@ jobs:
         if: env.SKIP_BUILD != 'true'
         run: npx cap copy
 
+      - name: 强制设置与 Zashboard 一致的版本号（Capacitor 5+
+        if: env.SKIP_BUILD != 'true'
+        run: |
+          TAG="${{ steps.check_new_release.outputs.SAVED_TAG }}"      # v2.4.0
+          VERSION="${TAG#v}"                                          # 2.4.0
+          
+          # 直接修改 build.gradle.kts（Capacitor 5+ 唯一生效方式）
+          sed -i "/versionName/c\    versionName = \"$VERSION\"" android/app/build.gradle.kts
+          sed -i "/versionCode/c\    versionCode = 1" android/app/build.gradle.kts
+          
+          echo "已强制设置版本号为：$VERSION"
+          grep "versionName" android/app/build.gradle.kts
+
       - name: Generate icons and splash screen
         if: env.SKIP_BUILD != 'true'
         run: |
@@ -97,13 +110,7 @@ jobs:
           if [ -f "AndroidManifest.xml" ]; then
             cp AndroidManifest.xml android/app/src/main/AndroidManifest.xml
           fi
-      - name: 同步 Zashboard 版本号（一定生效版）
-        if: env.SKIP_BUILD != 'true'
-        run: |
-          TAG="${{ steps.check_new_release.outputs.SAVED_TAG }}"    # 比如 v2.4.0
-          VERSION_NAME="${TAG#v}"                                   # 去掉 v → 2.4.0
-          echo "cdvVersionName=$VERSION_NAME" >> android/local.properties
-          echo "同步版本号完成：$VERSION_NAME"
+
 
       - name: Build app
         if: env.SKIP_BUILD != 'true'
