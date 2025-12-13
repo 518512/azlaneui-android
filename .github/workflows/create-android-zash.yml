@@ -80,18 +80,18 @@ jobs:
         if: env.SKIP_BUILD != 'true'
         run: npx cap copy
 
-      - name: 强制设置与 Zashboard 一致的版本号（Capacitor 5+
+      - name: 强制设置与 Zashboard 一致的版本号（已验证生效）
         if: env.SKIP_BUILD != 'true'
         run: |
-          TAG="${{ steps.check_new_release.outputs.SAVED_TAG }}"      # v2.4.0
-          VERSION="${TAG#v}"                                          # 2.4.0
-          
-          # 直接修改 build.gradle.kts（Capacitor 5+ 唯一生效方式）
-          sed -i "/versionName/c\    versionName = \"$VERSION\"" android/app/build.gradle.kts
-          sed -i "/versionCode/c\    versionCode = 1" android/app/build.gradle.kts
-          
-          echo "已强制设置版本号为：$VERSION"
-          grep "versionName" android/app/build.gradle.kts
+          TAG="${{ steps.check_new_release.outputs.SAVED_TAG }}"
+          VERSION="${TAG#v}"                     # v2.4.1 → 2.4.1
+
+          # 直接修改真正的 build.gradle（Groovy 版）
+          sed -i "s/versionName \".*\"/versionName \"$VERSION\"/" android/app/build.gradle
+          sed -i "s/versionCode .*/versionCode 1/" android/app/build.gradle
+
+          echo "成功把 APK 版本号改为：$VERSION"
+          grep versionName android/app/build.gradle
 
       - name: Generate icons and splash screen
         if: env.SKIP_BUILD != 'true'
