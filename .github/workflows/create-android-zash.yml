@@ -78,7 +78,40 @@ jobs:
 
       - name: Capacitor copy
         if: env.SKIP_BUILD != 'true'
-        run: npx cap copy
+        run: npx cap copy      
+        
+      - name: 实现沉浸式透明状态栏（内容顶到屏幕最顶，图标正常显示）
+        if: env.SKIP_BUILD != 'true'
+        run: |
+          mkdir -p android/app/src/main/java/com/azlaneui/app
+          cat > android/app/src/main/java/com/azlaneui/app/MainActivity.java << 'EOF'
+package com.azlaneui.app;
+
+import android.graphics.Color;
+import android.os.Build;
+import android.os.Bundle;
+import android.view.View;
+import com.getcapacitor.BridgeActivity;
+
+public class MainActivity extends BridgeActivity {
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        // 核心：内容延伸到状态栏后面 + 状态栏透明
+        getWindow().setDecorFitsSystemWindows(false);
+        getWindow().setStatusBarColor(Color.TRANSPARENT);
+
+        // 状态栏图标自动深浅切换（深色页面白字 / 浅色页面黑字）
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            View decor = getWindow().getDecorView();
+            decor.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
+        }
+    }
+}
+EOF
+          echo "沉浸式透明状态栏已注入"
+      
 
       - name: 强制设置与 Zashboard 一致的版本号（已验证生效）
         if: env.SKIP_BUILD != 'true'
