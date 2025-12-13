@@ -97,10 +97,13 @@ jobs:
           if [ -f "AndroidManifest.xml" ]; then
             cp AndroidManifest.xml android/app/src/main/AndroidManifest.xml
           fi
-      - name: 同步 Zashboard 版本号（这次一定成功）
+      - name: 同步 Zashboard 版本号（一定生效版）
         if: env.SKIP_BUILD != 'true'
         run: |
-          echo "cdvVersionName=${{ steps.check_new_release.outputs.SAVED_TAG }#v}" >> android/local.properties
+          TAG="${{ steps.check_new_release.outputs.SAVED_TAG }}"    # 比如 v2.4.0
+          VERSION_NAME="${TAG#v}"                                   # 去掉 v → 2.4.0
+          echo "cdvVersionName=$VERSION_NAME" >> android/local.properties
+          echo "同步版本号完成：$VERSION_NAME"
 
       - name: Build app
         if: env.SKIP_BUILD != 'true'
