@@ -78,7 +78,7 @@ jobs:
         
       - name: Install edge-to-edge plugin-实现沉浸式透明状态栏
         if: env.SKIP_BUILD != 'true'
-        run: npm install @capawesome/capacitor-android-edge-to-edge-support
+        run: npm install @capawesome/capacitor-android-edge-to-edge-support --legacy-peer-deps
 
       - name: Sync Capacitor-实现沉浸式透明状态栏
         if: env.SKIP_BUILD != 'true'
