@@ -83,9 +83,9 @@ jobs:
       - name: 实现沉浸式透明状态栏（强制 WebView 顶到最顶）
         if: env.SKIP_BUILD != 'true'
         run: |
-          mkdir -p android/app/src/main/java/com/azlaneui/app
-          cat > android/app/src/main/java/com/azlaneui/app/MainActivity.java << 'EOF'
-          package com.azlaneui.app;
+          mkdir -p android/app/src/main/java/com/azlaneui/zashboard
+          cat > android/app/src/main/java/com/azlaneui/zashboard/MainActivity.java << 'EOF'
+          package com.azlaneui.zashboard;
 
           import android.graphics.Color;
           import android.os.Build;
