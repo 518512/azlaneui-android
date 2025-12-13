@@ -6,10 +6,6 @@
     "androidScheme": "http"
   },
   "android": {
-    "allowMixedContent": true}
-  "plugins": {
-    "EdgeToEdge": {
-      "backgroundColor": "#00000000"   // 状态栏透明（可选，如果想有颜色改成 "#FFFFFFFF" 等）
-    }
-  }
+    "allowMixedContent": true,
+    "adjustMarginsForEdgeToEdge": "auto"}
 }
