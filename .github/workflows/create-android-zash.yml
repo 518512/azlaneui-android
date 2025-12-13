@@ -80,16 +80,16 @@ jobs:
         if: env.SKIP_BUILD != 'true'
         run: npx cap copy      
         
-      - name: 解决沉浸式状态栏重叠（Capacitor 6 终极可靠版）
+      - name: 解决沉浸式重叠（安全可靠版，无闪退）
         if: env.SKIP_BUILD != 'true'
         run: |
           mkdir -p android/app/src/main/java/com/azlaneui/zashboard
           cat > android/app/src/main/java/com/azlaneui/zashboard/MainActivity.java << 'EOF'
           package com.azlaneui.zashboard;
 
+          import android.graphics.Rect;
           import android.os.Bundle;
-          import android.view.ViewTreeObserver;
-          import android.view.Window;
+          import android.view.View;
           import com.getcapacitor.BridgeActivity;
 
           public class MainActivity extends BridgeActivity {
@@ -97,26 +97,31 @@ jobs:
               public void onCreate(Bundle savedInstanceState) {
                   super.onCreate(savedInstanceState);
 
-                  // 让状态栏透明 + 内容延伸
-                  Window window = getWindow();
-                  window.setStatusBarColor(0x00000000);  // 完全透明
-
-                  // 动态添加顶部 padding 避开状态栏（解决重叠）
-                  final android.view.View webView = getBridge().getWebView();
-                  webView.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+                  // 状态栏透明 + 内容延伸
+                  getWindow().setStatusBarColor(0x00000000);
+          
+                  // 安全获取状态栏高度并为 WebView 添加顶部 padding（解决重叠）
+                  final View webView = getBridge().getWebView();
+                  webView.post(new Runnable() {
                       @Override
-                      public void onGlobalLayout() {
-                          android.graphics.Rect r = new android.graphics.Rect();
-                          webView.getWindowVisibleDisplayFrame(r);
+                      public void run() {
+                          Rect r = new Rect();
+                          webView.getRootView().getWindowVisibleDisplayFrame(r);
                           int statusBarHeight = r.top;
+                          if (statusBarHeight == 0) {
+                              // 备用方案：通过资源 ID 获取
+                              int resourceId = getResources().getIdentifier("status_bar_height", "dimen", "android");
+                              if (resourceId > 0) {
+                                  statusBarHeight = getResources().getDimensionPixelSize(resourceId);
+                              }
+                          }
                           webView.setPadding(0, statusBarHeight, 0, 0);
-                          webView.getViewTreeObserver().removeOnGlobalLayoutListener(this);
                       }
                   });
               }
           }
           EOF
-                    echo "沉浸式重叠问题已彻底解决（动态 padding）"
+                    echo "沉浸式重叠修复代码已注入（安全版，无闪退）"
 
       - name: 强制设置与 Zashboard 一致的版本号（已验证生效）
         if: env.SKIP_BUILD != 'true'
