@@ -80,7 +80,7 @@ jobs:
         if: env.SKIP_BUILD != 'true'
         run: npx cap copy      
         
-      - name: 实现沉浸式透明状态栏（内容顶到屏幕最顶）
+      - name: 实现沉浸式透明状态栏（强制 WebView 顶到最顶）
         if: env.SKIP_BUILD != 'true'
         run: |
           mkdir -p android/app/src/main/java/com/azlaneui/app
@@ -98,19 +98,22 @@ jobs:
               public void onCreate(Bundle savedInstanceState) {
                   super.onCreate(savedInstanceState);
 
-                  // 核心：内容延伸到状态栏后面 + 状态栏透明
+                  // 让窗口内容延伸到状态栏后面
                   getWindow().setDecorFitsSystemWindows(false);
                   getWindow().setStatusBarColor(Color.TRANSPARENT);
 
-                  // 状态栏图标颜色自动适配（Android 6.0+）
+                  // 关键一行：强制 Capacitor WebView 也延伸到状态栏（解决留白问题）
+                  getBridge().getWebView().setFitsSystemWindows(false);
+
+                  // 状态栏图标颜色适配
                   if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                       getWindow().getDecorView().setSystemUiVisibility(
-                View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
+                          View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
                   }
               }
           }
           EOF
-          echo "沉浸式透明状态栏代码已成功注入"
+                    echo "沉浸式代码已注入（包含 WebView 强制顶天）"
       
 
       - name: 强制设置与 Zashboard 一致的版本号（已验证生效）
