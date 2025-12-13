@@ -80,7 +80,7 @@ jobs:
         if: env.SKIP_BUILD != 'true'
         run: npx cap copy      
         
-      - name: 解决状态栏重叠（Capacitor 6 终极版）
+      - name: 解决沉浸式状态栏重叠（Capacitor 6 终极可靠版）
         if: env.SKIP_BUILD != 'true'
         run: |
           mkdir -p android/app/src/main/java/com/azlaneui/zashboard
@@ -88,27 +88,35 @@ jobs:
           package com.azlaneui.zashboard;
 
           import android.os.Bundle;
+          import android.view.ViewTreeObserver;
+          import android.view.Window;
           import com.getcapacitor.BridgeActivity;
 
           public class MainActivity extends BridgeActivity {
               @Override
               public void onCreate(Bundle savedInstanceState) {
                   super.onCreate(savedInstanceState);
-                  // 强制 WebView 内容避开状态栏（解决重叠）
-                  getBridge().getWebView().setPadding(0, getStatusBarHeight(), 0, 0);
-              }
 
-              private int getStatusBarHeight() {
-                  int result = 0;
-                  int resourceId = getResources().getIdentifier("status_bar_height", "dimen", "android");
-                  if (resourceId > 0) {
-                      result = getResources().getDimensionPixelSize(resourceId);
-                  }
-                  return result;
+                  // 让状态栏透明 + 内容延伸
+                  Window window = getWindow();
+                  window.setStatusBarColor(0x00000000);  // 完全透明
+
+                  // 动态添加顶部 padding 避开状态栏（解决重叠）
+                  final android.view.View webView = getBridge().getWebView();
+                  webView.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+                      @Override
+                      public void onGlobalLayout() {
+                          android.graphics.Rect r = new android.graphics.Rect();
+                          webView.getWindowVisibleDisplayFrame(r);
+                          int statusBarHeight = r.top;
+                          webView.setPadding(0, statusBarHeight, 0, 0);
+                          webView.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+                      }
+                  });
               }
           }
           EOF
-                    echo "重叠问题已解决（手动 padding 状态栏高度）"
+                    echo "沉浸式重叠问题已彻底解决（动态 padding）"
 
       - name: 强制设置与 Zashboard 一致的版本号（已验证生效）
         if: env.SKIP_BUILD != 'true'
