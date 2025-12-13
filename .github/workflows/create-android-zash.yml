@@ -33,6 +33,13 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Upgrade to Capacitor 7
+        if: env.SKIP_BUILD != 'true'
+        run: |
+          npm install @capacitor/cli@latest @capacitor/core@latest @capacitor/android@latest
+          npx cap migrate
+          npx cap sync
+
       # -------------------- Fetch Latest Zashboard Release --------------------
       - name: Check for new Zashboard release
         id: check_new_release
@@ -75,14 +82,6 @@ jobs:
       - name: Capacitor update
         if: env.SKIP_BUILD != 'true'
         run: npx cap update
-        
-      - name: Install edge-to-edge plugin-实现沉浸式透明状态栏
-        if: env.SKIP_BUILD != 'true'
-        run: npm install @capawesome/capacitor-android-edge-to-edge-support --legacy-peer-deps
-
-      - name: Sync Capacitor-实现沉浸式透明状态栏
-        if: env.SKIP_BUILD != 'true'
-        run: npx cap sync android
         
       - name: Capacitor copy
         if: env.SKIP_BUILD != 'true'
