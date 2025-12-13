@@ -75,7 +75,15 @@ jobs:
       - name: Capacitor update
         if: env.SKIP_BUILD != 'true'
         run: npx cap update
+        
+      - name: Install edge-to-edge plugin-实现沉浸式透明状态栏
+        if: env.SKIP_BUILD != 'true'
+        run: npm install @capawesome/capacitor-android-edge-to-edge-support
 
+      - name: Sync Capacitor-实现沉浸式透明状态栏
+        if: env.SKIP_BUILD != 'true'
+        run: npx cap sync android
+        
       - name: Capacitor copy
         if: env.SKIP_BUILD != 'true'
         run: npx cap copy      
