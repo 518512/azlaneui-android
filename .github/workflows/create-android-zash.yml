@@ -80,49 +80,6 @@ jobs:
         if: env.SKIP_BUILD != 'true'
         run: npx cap copy      
         
-      - name: 解决沉浸式重叠（安全可靠版，无闪退）
-        if: env.SKIP_BUILD != 'true'
-        run: |
-          mkdir -p android/app/src/main/java/com/azlaneui/zashboard
-          cat > android/app/src/main/java/com/azlaneui/zashboard/MainActivity.java << 'EOF'
-          package com.azlaneui.zashboard;
-
-          import android.graphics.Rect;
-          import android.os.Bundle;
-          import android.view.View;
-          import com.getcapacitor.BridgeActivity;
-
-          public class MainActivity extends BridgeActivity {
-              @Override
-              public void onCreate(Bundle savedInstanceState) {
-                  super.onCreate(savedInstanceState);
-
-                  // 状态栏透明 + 内容延伸
-                  getWindow().setStatusBarColor(0x00000000);
-          
-                  // 安全获取状态栏高度并为 WebView 添加顶部 padding（解决重叠）
-                  final View webView = getBridge().getWebView();
-                  webView.post(new Runnable() {
-                      @Override
-                      public void run() {
-                          Rect r = new Rect();
-                          webView.getRootView().getWindowVisibleDisplayFrame(r);
-                          int statusBarHeight = r.top;
-                          if (statusBarHeight == 0) {
-                              // 备用方案：通过资源 ID 获取
-                              int resourceId = getResources().getIdentifier("status_bar_height", "dimen", "android");
-                              if (resourceId > 0) {
-                                  statusBarHeight = getResources().getDimensionPixelSize(resourceId);
-                              }
-                          }
-                          webView.setPadding(0, statusBarHeight, 0, 0);
-                      }
-                  });
-              }
-          }
-          EOF
-                    echo "沉浸式重叠修复代码已注入（安全版，无闪退）"
-
       - name: 强制设置与 Zashboard 一致的版本号（已验证生效）
         if: env.SKIP_BUILD != 'true'
         run: |
@@ -261,7 +218,6 @@ jobs:
 
           *Zashboard 版本：* \`$NAME\` ($DATE)
           *构建时间：* \`${{ steps.current-datetime.outputs.CURRENT_DATETIME }}\`
-          # *触发者：* ${{ github.actor }}
 
           *更新内容：*
           $CLEAN_BODY
