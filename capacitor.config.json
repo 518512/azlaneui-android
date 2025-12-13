@@ -6,6 +6,5 @@
     "androidScheme": "http"
   },
   "android": {
-    "allowMixedContent": true,
-    "adjustMarginsForEdgeToEdge": "force"}
+    "allowMixedContent": true}
 }
