@@ -97,16 +97,14 @@ jobs:
           if [ -f "AndroidManifest.xml" ]; then
             cp AndroidManifest.xml android/app/src/main/AndroidManifest.xml
           fi
+      - name: 同步 Zashboard 版本号（这次一定成功）
+        if: env.SKIP_BUILD != 'true'
+        run: |
+          echo "cdvVersionName=${{ steps.check_new_release.outputs.SAVED_TAG }#v}" >> android/local.properties
 
       - name: Build app
         if: env.SKIP_BUILD != 'true'
         run: cd android && ./gradlew assembleRelease
-
-      - name: 同步 Zashboard 版本号（极简最终版）
-        if: env.SKIP_BUILD != 'true'
-        run: |
-          VERSION=${{ steps.check_new_release.outputs.SAVED_TAG }}   # v2.3.1
-          echo "cdvVersionName=${VERSION#v}" >> android/local.properties
 
       - name: Extract Android signing key
         if: env.SKIP_BUILD != 'true'
