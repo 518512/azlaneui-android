@@ -33,13 +33,6 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Upgrade to Capacitor 7
-        if: env.SKIP_BUILD != 'true'
-        run: |
-          npm install @capacitor/cli@latest @capacitor/core@latest @capacitor/android@latest
-          npx cap migrate
-          npx cap sync
-
       # -------------------- Fetch Latest Zashboard Release --------------------
       - name: Check for new Zashboard release
         id: check_new_release
@@ -87,41 +80,35 @@ jobs:
         if: env.SKIP_BUILD != 'true'
         run: npx cap copy      
         
-      - name: 实现沉浸式透明状态栏（强制 WebView 顶到最顶）
+      - name: 解决状态栏重叠（Capacitor 6 终极版）
         if: env.SKIP_BUILD != 'true'
         run: |
           mkdir -p android/app/src/main/java/com/azlaneui/zashboard
           cat > android/app/src/main/java/com/azlaneui/zashboard/MainActivity.java << 'EOF'
           package com.azlaneui.zashboard;
 
-          import android.graphics.Color;
-          import android.os.Build;
           import android.os.Bundle;
-          import android.view.View;
           import com.getcapacitor.BridgeActivity;
 
           public class MainActivity extends BridgeActivity {
               @Override
               public void onCreate(Bundle savedInstanceState) {
                   super.onCreate(savedInstanceState);
+                  // 强制 WebView 内容避开状态栏（解决重叠）
+                  getBridge().getWebView().setPadding(0, getStatusBarHeight(), 0, 0);
+              }
 
-                  // 让窗口内容延伸到状态栏后面
-                  getWindow().setDecorFitsSystemWindows(false);
-                  getWindow().setStatusBarColor(Color.TRANSPARENT);
-
-                  // 关键一行：强制 Capacitor WebView 也延伸到状态栏（解决留白问题）
-                  getBridge().getWebView().setFitsSystemWindows(false);
-
-                  // 状态栏图标颜色适配
-                  if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                      getWindow().getDecorView().setSystemUiVisibility(
-                          View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
+              private int getStatusBarHeight() {
+                  int result = 0;
+                  int resourceId = getResources().getIdentifier("status_bar_height", "dimen", "android");
+                  if (resourceId > 0) {
+                      result = getResources().getDimensionPixelSize(resourceId);
                   }
+                  return result;
               }
           }
           EOF
-                    echo "沉浸式代码已注入（包含 WebView 强制顶天）"
-      
+                    echo "重叠问题已解决（手动 padding 状态栏高度）"
 
       - name: 强制设置与 Zashboard 一致的版本号（已验证生效）
         if: env.SKIP_BUILD != 'true'
