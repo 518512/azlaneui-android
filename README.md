@@ -1,7 +1,6 @@
 > [!NOTE]
 > **维护记录**
 > 1).增加推送APK及zashboard日志到Tg
-
 > 2).修复APP版本与zashboard一致。
 
 # Auto converting panels to apk
